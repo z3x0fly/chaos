@@ -7,7 +7,7 @@
 #include <BLEAdvertisedDevice.h>
 #include <ArduinoJson.h>
 #include "FS.h"
-#include "LITTLEFS.h"
+#include "SPIFFS.h"
 
 // Include lib references - Chaos Core and Web libraries
 #include "chaos_core.h"
@@ -137,23 +137,31 @@ void setup() {
     Serial.println("C.H.A.O.S - Cyber Hacking & Offensive Security Platform");
     Serial.println("Initializing...");
     
-    // Initialize LittleFS with format on failure
-    if (!LITTLEFS.begin()) {
-        Serial.println("LittleFS mount failed, formatting...");
-        if (LITTLEFS.format()) {
-            Serial.println("LittleFS formatted successfully");
-            if (LITTLEFS.begin()) {
-                Serial.println("LittleFS mounted after format");
-            } else {
-                Serial.println("LittleFS mount failed even after format");
-                return;
-            }
-        } else {
-            Serial.println("LittleFS format failed");
-            return;
+    // Initialize SPIFFS
+    Serial.println("Attempting to mount SPIFFS...");
+    if (!SPIFFS.begin(true)) {
+        Serial.println("SPIFFS mount failed");
+        return;
+    } else {
+        Serial.println("SPIFFS mounted successfully");
+    }
+    
+    // Test file operations
+    Serial.println("Testing SPIFFS file operations...");
+    File testFile = SPIFFS.open("/test.txt", "w");
+    if (testFile) {
+        testFile.println("SPIFFS test");
+        testFile.close();
+        Serial.println("Test file created successfully");
+        
+        File readFile = SPIFFS.open("/test.txt", "r");
+        if (readFile) {
+            Serial.println("Test file read successfully: " + readFile.readString());
+            readFile.close();
+            SPIFFS.remove("/test.txt");
         }
     } else {
-        Serial.println("LittleFS mounted successfully");
+        Serial.println("Failed to create test file");
     }
     
     // Initialize Chaos Core - Reference: lib/chaos_core/chaos_core.cpp
@@ -189,20 +197,56 @@ void setup() {
     // Initialize RF Jammer
     initRFJammer();
     
-    // Root route - serve index.html from LittleFS
+    // Root route - serve HTML directly (fallback)
     server.on("/", HTTP_GET, [](){
-        File file = LITTLEFS.open("/index.html", "r");
-        if (file) {
-            server.streamFile(file, "text/html");
-            file.close();
+        Serial.println("Root route called");
+        
+        // List all files in SPIFFS for debugging
+        Serial.println("Listing SPIFFS files:");
+        File root = SPIFFS.open("/");
+        File file = root.openNextFile();
+        int fileCount = 0;
+        while (file) {
+            Serial.println("  " + String(file.name()) + " - " + String(file.size()) + " bytes");
+            file = root.openNextFile();
+            fileCount++;
+        }
+        root.close();
+        Serial.println("Total files in SPIFFS: " + String(fileCount));
+        
+        // Try SPIFFS first
+        File indexFile = SPIFFS.open("/index.html", "r");
+        if (indexFile) {
+            Serial.println("index.html found, size: " + String(indexFile.size()) + " bytes");
+            server.streamFile(indexFile, "text/html");
+            indexFile.close();
         } else {
-            server.send(404, "text/plain", "File not found");
+            Serial.println("index.html NOT found in SPIFFS, serving embedded HTML");
+            // Fallback: serve embedded HTML
+            String html = "<!DOCTYPE html><html><head><title>C.H.A.O.S</title>";
+            html += "<style>body{background:#000;color:#0f0;font-family:monospace;}";
+            html += ".container{max-width:800px;margin:0 auto;padding:20px;}";
+            html += "h1{color:#ff0000;text-align:center;border:2px solid #0f0;padding:10px;}";
+            html += ".status{background:#111;border:1px solid #0f0;padding:15px;margin:10px 0;}";
+            html += "button{background:#000;color:#0f0;border:1px solid #0f0;padding:10px;margin:5px;cursor:pointer;}";
+            html += "button:hover{background:#0f0;color:#000;}</style></head><body>";
+            html += "<div class='container'><h1>🔥 C.H.A.O.S 🔥</h1>";
+            html += "<div class='status'><h2>Cyber Hacking & Offensive Security Platform</h2>";
+            html += "<p>Web arayuzu SPIFFS'den yuklenemedi, embedded mod aktif.</p>";
+            html += "<p>AP: CHAOS_AP | IP: 192.168.4.1</p>";
+            html += "<p>SPIFFS files found: " + String(fileCount) + "</p></div>";
+            html += "<button onclick='alert(\"BLE Scan baslatildi\")'>BLE Scan</button>";
+            html += "<button onclick='alert(\"WiFi Scan baslatildi\")'>WiFi Scan</button>";
+            html += "<button onclick='alert(\"LTE Scan baslatildi\")'>LTE Scan</button>";
+            html += "<script>console.log('C.H.A.O.S embedded mode active');</script>";
+            html += "</div></body></html>";
+            server.send(200, "text/html", html);
         }
     });
     
     // Static file routes
-    server.serveStatic("/script.js", LITTLEFS, "/script.js");
-    server.serveStatic("/style.css", LITTLEFS, "/style.css");
+    server.serveStatic("/script.js", SPIFFS, "/script.js");
+    server.serveStatic("/style.css", SPIFFS, "/style.css");
     
     // API routes - Enhanced with chaos_core integration
     server.on("/api/status", [](){
