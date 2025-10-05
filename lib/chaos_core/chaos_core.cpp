@@ -1,5 +1,5 @@
 #include "chaos_core.h"
-#include "config.h"
+#include "../../include/config.h"
 
 // Global instance
 ChaosCore chaos;

@@ -1,5 +1,5 @@
 #include "chaos_web.h"
-#include "config.h"
+#include "../../include/config.h"
 
 // Global instance
 ChaosWeb chaosWeb;
@@ -18,7 +18,7 @@ bool ChaosWeb::initialize() {
         return true;
     }
     
-    server = new AsyncWebServer(WEB_SERVER_PORT);
+    server = new WebServer(WEB_SERVER_PORT);
     if (!server) {
         Serial.println("[ERROR] Failed to create web server");
         return false;
@@ -31,7 +31,6 @@ bool ChaosWeb::initialize() {
 
 void ChaosWeb::shutdown() {
     if (server) {
-        server->end();
         delete server;
         server = nullptr;
     }
@@ -46,49 +45,49 @@ void ChaosWeb::startServer() {
     }
     
     // Main page
-    server->on("/", HTTP_GET, [this](AsyncWebServerRequest *request) {
-        this->handleRoot(request);
+    server->on("/", HTTP_GET, [this]() {
+        this->handleRoot();
     });
     
     // API routes
-    server->on("/api/status", HTTP_GET, [this](AsyncWebServerRequest *request) {
-        this->handleStatus(request);
+    server->on("/api/status", HTTP_GET, [this]() {
+        this->handleStatus();
     });
     
-    server->on("/api/ble/scan/start", HTTP_POST, [this](AsyncWebServerRequest *request) {
-        this->handleBLEScanStart(request);
+    server->on("/api/ble/scan/start", HTTP_POST, [this]() {
+        this->handleBLEScanStart();
     });
     
-    server->on("/api/ble/scan/stop", HTTP_POST, [this](AsyncWebServerRequest *request) {
-        this->handleBLEScanStop(request);
+    server->on("/api/ble/scan/stop", HTTP_POST, [this]() {
+        this->handleBLEScanStop();
     });
     
-    server->on("/api/ble/jam/start", HTTP_POST, [this](AsyncWebServerRequest *request) {
-        this->handleBLEJamStart(request);
+    server->on("/api/ble/jam/start", HTTP_POST, [this]() {
+        this->handleBLEJamStart();
     });
     
-    server->on("/api/ble/jam/stop", HTTP_POST, [this](AsyncWebServerRequest *request) {
-        this->handleBLEJamStop(request);
+    server->on("/api/ble/jam/stop", HTTP_POST, [this]() {
+        this->handleBLEJamStop();
     });
     
-    server->on("/api/wifi/scan/start", HTTP_POST, [this](AsyncWebServerRequest *request) {
-        this->handleWiFiScanStart(request);
+    server->on("/api/wifi/scan/start", HTTP_POST, [this]() {
+        this->handleWiFiScanStart();
     });
     
-    server->on("/api/wifi/scan/stop", HTTP_POST, [this](AsyncWebServerRequest *request) {
-        this->handleWiFiScanStop(request);
+    server->on("/api/wifi/scan/stop", HTTP_POST, [this]() {
+        this->handleWiFiScanStop();
     });
     
-    server->on("/api/wifi/jam/start", HTTP_POST, [this](AsyncWebServerRequest *request) {
-        this->handleWiFiJamStart(request);
+    server->on("/api/wifi/jam/start", HTTP_POST, [this]() {
+        this->handleWiFiJamStart();
     });
     
-    server->on("/api/wifi/jam/stop", HTTP_POST, [this](AsyncWebServerRequest *request) {
-        this->handleWiFiJamStop(request);
+    server->on("/api/wifi/jam/stop", HTTP_POST, [this]() {
+        this->handleWiFiJamStop();
     });
     
-    server->on("/api/scan/results", HTTP_GET, [this](AsyncWebServerRequest *request) {
-        this->handleScanResults(request);
+    server->on("/api/scan/results", HTTP_GET, [this]() {
+        this->handleScanResults();
     });
     
     server->begin();
@@ -97,96 +96,95 @@ void ChaosWeb::startServer() {
 
 void ChaosWeb::stopServer() {
     if (server) {
-        server->end();
         Serial.println("[INFO] Web server stopped");
     }
 }
 
-void ChaosWeb::handleRoot(AsyncWebServerRequest *request) {
+void ChaosWeb::handleRoot() {
     // HTML content would be loaded from a separate file or stored as a constant
     // For now, we'll send a simple response
-    request->send(200, "text/html", "<h1>C.H.A.O.S Web Interface</h1><p>Interface loaded successfully!</p>");
+    server->send(200, "text/html", "<h1>C.H.A.O.S Web Interface</h1><p>Interface loaded successfully!</p>");
 }
 
-void ChaosWeb::handleStatus(AsyncWebServerRequest *request) {
+void ChaosWeb::handleStatus() {
     String statusJSON = chaos.getStatusJSON();
-    sendJSONResponse(request, statusJSON);
+    sendJSONResponse(statusJSON);
 }
 
-void ChaosWeb::handleBLEScanStart(AsyncWebServerRequest *request) {
+void ChaosWeb::handleBLEScanStart() {
     if (chaos.startBLEScan()) {
-        sendJSONResponse(request, "{\"status\":\"BLE scan started\"}");
+        sendJSONResponse("{\"status\":\"BLE scan started\"}");
     } else {
-        sendErrorResponse(request, "Failed to start BLE scan");
+        sendErrorResponse("Failed to start BLE scan");
     }
 }
 
-void ChaosWeb::handleBLEScanStop(AsyncWebServerRequest *request) {
+void ChaosWeb::handleBLEScanStop() {
     if (chaos.stopBLEScan()) {
-        sendJSONResponse(request, "{\"status\":\"BLE scan stopped\"}");
+        sendJSONResponse("{\"status\":\"BLE scan stopped\"}");
     } else {
-        sendErrorResponse(request, "Failed to stop BLE scan");
+        sendErrorResponse("Failed to stop BLE scan");
     }
 }
 
-void ChaosWeb::handleBLEJamStart(AsyncWebServerRequest *request) {
+void ChaosWeb::handleBLEJamStart() {
     if (chaos.startBLEJam()) {
-        sendJSONResponse(request, "{\"status\":\"BLE jamming started\"}");
+        sendJSONResponse("{\"status\":\"BLE jamming started\"}");
     } else {
-        sendErrorResponse(request, "Failed to start BLE jamming");
+        sendErrorResponse("Failed to start BLE jamming");
     }
 }
 
-void ChaosWeb::handleBLEJamStop(AsyncWebServerRequest *request) {
+void ChaosWeb::handleBLEJamStop() {
     if (chaos.stopBLEJam()) {
-        sendJSONResponse(request, "{\"status\":\"BLE jamming stopped\"}");
+        sendJSONResponse("{\"status\":\"BLE jamming stopped\"}");
     } else {
-        sendErrorResponse(request, "Failed to stop BLE jamming");
+        sendErrorResponse("Failed to stop BLE jamming");
     }
 }
 
-void ChaosWeb::handleWiFiScanStart(AsyncWebServerRequest *request) {
+void ChaosWeb::handleWiFiScanStart() {
     if (chaos.startWiFiScan()) {
-        sendJSONResponse(request, "{\"status\":\"WiFi scan started\"}");
+        sendJSONResponse("{\"status\":\"WiFi scan started\"}");
     } else {
-        sendErrorResponse(request, "Failed to start WiFi scan");
+        sendErrorResponse("Failed to start WiFi scan");
     }
 }
 
-void ChaosWeb::handleWiFiScanStop(AsyncWebServerRequest *request) {
+void ChaosWeb::handleWiFiScanStop() {
     if (chaos.stopWiFiScan()) {
-        sendJSONResponse(request, "{\"status\":\"WiFi scan stopped\"}");
+        sendJSONResponse("{\"status\":\"WiFi scan stopped\"}");
     } else {
-        sendErrorResponse(request, "Failed to stop WiFi scan");
+        sendErrorResponse("Failed to stop WiFi scan");
     }
 }
 
-void ChaosWeb::handleWiFiJamStart(AsyncWebServerRequest *request) {
+void ChaosWeb::handleWiFiJamStart() {
     if (chaos.startWiFiJam()) {
-        sendJSONResponse(request, "{\"status\":\"WiFi jamming started\"}");
+        sendJSONResponse("{\"status\":\"WiFi jamming started\"}");
     } else {
-        sendErrorResponse(request, "Failed to start WiFi jamming");
+        sendErrorResponse("Failed to start WiFi jamming");
     }
 }
 
-void ChaosWeb::handleWiFiJamStop(AsyncWebServerRequest *request) {
+void ChaosWeb::handleWiFiJamStop() {
     if (chaos.stopWiFiJam()) {
-        sendJSONResponse(request, "{\"status\":\"WiFi jamming stopped\"}");
+        sendJSONResponse("{\"status\":\"WiFi jamming stopped\"}");
     } else {
-        sendErrorResponse(request, "Failed to stop WiFi jamming");
+        sendErrorResponse("Failed to stop WiFi jamming");
     }
 }
 
-void ChaosWeb::handleScanResults(AsyncWebServerRequest *request) {
+void ChaosWeb::handleScanResults() {
     String resultsJSON = chaos.getScanResultsJSON();
-    sendJSONResponse(request, resultsJSON);
+    sendJSONResponse(resultsJSON);
 }
 
-void ChaosWeb::sendJSONResponse(AsyncWebServerRequest *request, String json) {
-    request->send(200, "application/json", json);
+void ChaosWeb::sendJSONResponse(String json) {
+    server->send(200, "application/json", json);
 }
 
-void ChaosWeb::sendErrorResponse(AsyncWebServerRequest *request, String error) {
+void ChaosWeb::sendErrorResponse(String error) {
     String errorJSON = "{\"error\":\"" + error + "\"}";
-    request->send(400, "application/json", errorJSON);
+    server->send(400, "application/json", errorJSON);
 }
