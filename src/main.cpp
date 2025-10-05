@@ -137,12 +137,24 @@ void setup() {
     Serial.println("C.H.A.O.S - Cyber Hacking & Offensive Security Platform");
     Serial.println("Initializing...");
     
-    // Initialize LittleFS
+    // Initialize LittleFS with format on failure
     if (!LITTLEFS.begin()) {
-        Serial.println("LittleFS mount failed");
-        return;
+        Serial.println("LittleFS mount failed, formatting...");
+        if (LITTLEFS.format()) {
+            Serial.println("LittleFS formatted successfully");
+            if (LITTLEFS.begin()) {
+                Serial.println("LittleFS mounted after format");
+            } else {
+                Serial.println("LittleFS mount failed even after format");
+                return;
+            }
+        } else {
+            Serial.println("LittleFS format failed");
+            return;
+        }
+    } else {
+        Serial.println("LittleFS mounted successfully");
     }
-    Serial.println("LittleFS mounted successfully");
     
     // Initialize Chaos Core - Reference: lib/chaos_core/chaos_core.cpp
     if (!chaos.initialize()) {
@@ -177,8 +189,20 @@ void setup() {
     // Initialize RF Jammer
     initRFJammer();
     
-    // Serve static files from LittleFS
-    server.serveStatic("/", LITTLEFS, "/");
+    // Root route - serve index.html from LittleFS
+    server.on("/", HTTP_GET, [](){
+        File file = LITTLEFS.open("/index.html", "r");
+        if (file) {
+            server.streamFile(file, "text/html");
+            file.close();
+        } else {
+            server.send(404, "text/plain", "File not found");
+        }
+    });
+    
+    // Static file routes
+    server.serveStatic("/script.js", LITTLEFS, "/script.js");
+    server.serveStatic("/style.css", LITTLEFS, "/style.css");
     
     // API routes - Enhanced with chaos_core integration
     server.on("/api/status", [](){
