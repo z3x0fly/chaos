@@ -1,15 +1,17 @@
 # C.H.A.O.S - Cyber Hacking & Offensive Security Platform
 
-[![PlatformIO](https://img.shields.io/badge/PlatformIO-ESP32--S3-blue)](https://platformio.org/)
-[![Arduino](https://img.shields.io/badge/Arduino-Framework-green)](https://www.arduino.cc/)
-[![License](https://img.shields.io/badge/License-Educational-red)](LICENSE)
-
 ## ⚠️ WARNING ⚠️
 **This project is for educational and testing purposes only. Use only on your own devices and networks. Unauthorized use on others' devices or networks is illegal and unethical.**
 
-## 🚀 Overview
+## Overview
+C.H.A.O.S (Cyber Hacking & Offensive Security) is an ESP32-S based platform designed for testing and educational purposes. It provides a web-based interface for scanning and analyzing BLE and WiFi networks in your environment.
 
-**C.H.A.O.S** (Cyber Hacking & Offensive Security) is an advanced ESP32-S3 based platform designed for wireless security testing and educational purposes. It provides a comprehensive web-based interface for scanning, analyzing, and testing BLE, WiFi, and LTE networks in your environment.
+## Features
+- **BLE Device Scanning**: Discover nearby Bluetooth Low Energy devices
+- **WiFi Network Scanning**: Analyze available WiFi networks
+- **Web-based Interface**: Modern, hacker-themed UI for easy control
+- **Real-time Status Updates**: Live monitoring of scan results and system status
+- **Educational Focus**: Learn about wireless security and network analysis
 
 ## ✨ Features
 

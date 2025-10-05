@@ -1,5 +1,4 @@
 #include <WiFi.h>
-#include <WebServer.h>
 #include <BluetoothSerial.h>
 #include <BLEDevice.h>
 #include <BLEUtils.h>
@@ -1124,22 +1123,14 @@ void performRealLTEJam() {
             for (int ch = 1; ch <= 13; ch++) {
                 // Set WiFi channel to create interference
                 esp_wifi_set_channel(ch, WIFI_SECOND_CHAN_NONE);
-                
-                // Send high-power WiFi frames to create interference
-                esp_wifi_start();
                 delay(10); // Short burst
-                esp_wifi_stop();
-                delay(5);
             }
             
             Serial.println("🔥 AGGRESSIVE LTE JAM CYCLE " + String(jamCycles) + " - Multi-channel interference");
         } else {
             // Standard interference pattern
             esp_wifi_set_channel(currentJamChannel, WIFI_SECOND_CHAN_NONE);
-            esp_wifi_start();
             delay(50);
-            esp_wifi_stop();
-            delay(25);
             
             // Switch channel for broader interference
             currentJamChannel = (currentJamChannel % 13) + 1;
