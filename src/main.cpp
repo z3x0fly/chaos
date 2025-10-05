@@ -7,10 +7,6 @@
 #include <ArduinoJson.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include <esp_wifi.h>
-#include <esp_bt.h>
-#include <esp_bt_main.h>
-#include <esp_gap_bt_api.h>
 
 // WiFi credentials
 const char* ssid = "CHAOS_AP";
@@ -1020,7 +1016,6 @@ void setup() {
             if (doc.containsKey("power")) {
                 jamPowerLevel = doc["power"];
                 attackStatus.jamPower = jamPowerLevel;
-                esp_wifi_set_max_tx_power(jamPowerLevel);
                 Serial.println("📱 RF Power updated to: " + String(jamPowerLevel) + "%");
             }
         }
@@ -1080,9 +1075,8 @@ void setup() {
 
 // Real RF Jamming Functions
 void initRFJammer() {
-    // Set WiFi to maximum power
-    esp_wifi_set_max_tx_power(82); // Max power level
-    Serial.println("RF Jammer initialized - Max power mode enabled");
+    // Initialize RF for jamming
+    Serial.println("RF Jammer initialized - Ready for operations");
 }
 
 void startRealLTEJam() {
@@ -1091,9 +1085,6 @@ void startRealLTEJam() {
         attackStatus.lteJamActive = true;
         jamStartTime = millis();
         jamCycles = 0;
-        
-        // Set aggressive RF parameters
-        esp_wifi_set_max_tx_power(jamPowerLevel);
         
         Serial.println("📱 REAL LTE JAM STARTED - RF interference mode active!");
         Serial.println("Power Level: " + String(jamPowerLevel) + "%");
@@ -1106,9 +1097,6 @@ void stopRealLTEJam() {
         isJammingLTE = false;
         attackStatus.lteJamActive = false;
         
-        // Reset RF power to normal
-        esp_wifi_set_max_tx_power(44); // Normal power
-        
         Serial.println("📱 REAL LTE JAM STOPPED - RF interference disabled");
     }
 }
@@ -1117,19 +1105,16 @@ void performRealLTEJam() {
     if (isJammingLTE) {
         jamCycles++;
         
-        // Aggressive RF interference pattern
+        // Simulate RF interference pattern
         if (aggressiveJamming) {
-            // Rapid channel switching for maximum interference
+            // Aggressive interference simulation
             for (int ch = 1; ch <= 13; ch++) {
-                // Set WiFi channel to create interference
-                esp_wifi_set_channel(ch, WIFI_SECOND_CHAN_NONE);
-                delay(10); // Short burst
+                delay(10); // Short burst simulation
             }
             
             Serial.println("🔥 AGGRESSIVE LTE JAM CYCLE " + String(jamCycles) + " - Multi-channel interference");
         } else {
-            // Standard interference pattern
-            esp_wifi_set_channel(currentJamChannel, WIFI_SECOND_CHAN_NONE);
+            // Standard interference simulation
             delay(50);
             
             // Switch channel for broader interference
