@@ -7,7 +7,7 @@
 #include <BLEAdvertisedDevice.h>
 #include <ArduinoJson.h>
 #include "FS.h"
-#include "SPIFFS.h"
+#include "LITTLEFS.h"
 
 // Include lib references - Chaos Core and Web libraries
 #include "chaos_core.h"
@@ -137,12 +137,12 @@ void setup() {
     Serial.println("C.H.A.O.S - Cyber Hacking & Offensive Security Platform");
     Serial.println("Initializing...");
     
-    // Initialize SPIFFS
-    if (!SPIFFS.begin()) {
-        Serial.println("SPIFFS mount failed");
+    // Initialize LittleFS
+    if (!LITTLEFS.begin()) {
+        Serial.println("LittleFS mount failed");
         return;
     }
-    Serial.println("SPIFFS mounted successfully");
+    Serial.println("LittleFS mounted successfully");
     
     // Initialize Chaos Core - Reference: lib/chaos_core/chaos_core.cpp
     if (!chaos.initialize()) {
@@ -177,8 +177,8 @@ void setup() {
     // Initialize RF Jammer
     initRFJammer();
     
-    // Serve static files from SPIFFS
-    server.serveStatic("/", SPIFFS, "/");
+    // Serve static files from LittleFS
+    server.serveStatic("/", LITTLEFS, "/");
     
     // API routes - Enhanced with chaos_core integration
     server.on("/api/status", [](){
